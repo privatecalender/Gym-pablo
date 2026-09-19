@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Iron &amp; Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" onerror="document.getElementById('root').innerHTML='<div style=\'padding:40px;font-family:sans-serif;color:#FF4D6D;max-width:480px;margin:0 auto;\'>Could not load React from the CDN. Check your internet connection, or an ad blocker / firewall may be blocking cdnjs.cloudflare.com.</div>'"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" onerror="document.getElementById('root').innerHTML='<div style=\'padding:40px;font-family:sans-serif;color:#FF4D6D;max-width:480px;margin:0 auto;\'>Could not load React DOM from the CDN. Check your internet connection, or an ad blocker / firewall may be blocking cdnjs.cloudflare.com.</div>'"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js" onerror="document.getElementById('root').innerHTML='<div style=\'padding:40px;font-family:sans-serif;color:#FF4D6D;max-width:480px;margin:0 auto;\'>Could not load Babel from the CDN. Check your internet connection, or an ad blocker / firewall may be blocking cdnjs.cloudflare.com.</div>'"></script>
+<script>
+  window.addEventListener('error', function (e) {
+    var root = document.getElementById('root');
+    if (root && !root.dataset.mounted) {
+      root.innerHTML = '<div style="padding:40px;font-family:sans-serif;color:#FF4D6D;max-width:520px;margin:0 auto;">' +
+        '<b>Something failed to load.</b><br/><br/>' + (e && e.message ? e.message : 'Unknown error') +
+        '<br/><br/>Try a hard refresh (Ctrl/Cmd+Shift+R). If this keeps happening, open developer tools (F12) and share the red error text.</div>';
+    }
+  });
+</script>
+<style>
+  :root {
+    --bg: #FFF8EF; --surface: #FFFFFF; --ink: #201B2E; --muted: #79738A;
+    --rule: #F1E3D2; --primary: #FF5A36; --primary-ink: #FFFFFF;
+    --teal: #00B8A0; --yellow: #FFC93C; --positive: #22C55E; --negative: #FF4D6D; --warn: #FFA23C;
+    --font-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16121F; --surface: #221D33; --ink: #F4F0FF; --muted: #A79FC2; --rule: #362E4C;
+      --primary: #FF7452; --teal: #2DD4BF; --yellow: #FFD873; --positive: #4ADE80; --negative: #FF7A93; --warn: #FFB65C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16121F; --surface: #221D33; --ink: #F4F0FF; --muted: #A79FC2; --rule: #362E4C;
+    --primary: #FF7452; --teal: #2DD4BF; --yellow: #FFD873; --positive: #4ADE80; --negative: #FF7A93; --warn: #FFB65C;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); }
+  input, select, button, textarea { font-family: var(--font-body); }
+  ::-webkit-scrollbar { height: 0; }
+  .scrollx { overflow-x: auto; }
+  .boot-loading { padding: 60px 20px; text-align: center; color: var(--muted); }
+  .print-report { display: none; }
+  @media print {
+    body * { visibility: hidden; }
+    .print-report, .print-report * { visibility: visible; }
+    .print-report { display: block; position: absolute; top: 0; left: 0; width: 100%; padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"><div class="boot-loading">Loading Iron &amp; Table…</div></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+
+/* ============================================================
+   ICONS
+   ============================================================ */
+function Icon({ path, size = 16, ...props }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" {...props}>{path}</svg>;
+}
+const IconDumbbell = (p) => <Icon {...p} path={<><path d="M6.5 6.5 17.5 17.5"/><path d="M21 21l-1.5-1.5"/><path d="M4.5 4.5 3 3"/><path d="M15 6l3-3 3 3-3 3Z"/><path d="M6 15l-3 3 3 3 3-3Z"/><path d="M9 6l3-3"/><path d="M15 18l3 3"/></>} />;
+const IconTrend = (p) => <Icon {...p} path={<><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></>} />;
+const IconApple = (p) => <Icon {...p} path={<><path d="M12 8c-3 0-5.5 2.5-5.5 6S9 20 12 20s5.5-2.5 5.5-6-2.5-6-5.5-6Z"/><path d="M12 8c0-2 1-3.5 2.5-4"/></>} />;
+const IconCalendar = (p) => <Icon {...p} path={<><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></>} />;
+const IconFlame = (p) => <Icon {...p} path={<path d="M12 2c1 3-3 4-3 8a3 3 0 0 0 6 0c0-1-1-2-1-3 2 1 4 3 4 6a6 6 0 1 1-12 0c0-4 3-6 3-9 0-1 1-2 3-2Z"/>} />;
+const IconPlus = (p) => <Icon {...p} path={<><path d="M12 5v14"/><path d="M5 12h14"/></>} />;
+const IconX = (p) => <Icon {...p} path={<><path d="M18 6 6 18"/><path d="M6 6l12 12"/></>} />;
+const IconEdit = (p) => <Icon {...p} path={<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>} />;
+const IconTrash = (p) => <Icon {...p} path={<><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></>} />;
+const IconPrinter = (p) => <Icon {...p} path={<><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1"/><path d="M6 17v4h12v-4"/></>} />;
+const IconArrowUp = (p) => <Icon {...p} path={<><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></>} />;
+const IconArrowDown = (p) => <Icon {...p} path={<><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></>} />;
+const IconSparkle = (p) => <Icon {...p} path={<><path d="M12 3v4"/><path d="M12 17v4"/><path d="M3 12h4"/><path d="M17 12h4"/><path d="M5.6 5.6l2.8 2.8"/><path d="M15.6 15.6l2.8 2.8"/><path d="M18.4 5.6l-2.8 2.8"/><path d="M8.4 15.6l-2.8 2.8"/></>} />;
+const IconScale = (p) => <Icon {...p} path={<><rect x="3" y="13" width="18" height="8" rx="2"/><path d="M12 13V7"/><circle cx="12" cy="5" r="2"/></>} />;
+const IconTimer = (p) => <Icon {...p} path={<><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/></>} />;
+const IconPlay = (p) => <Icon {...p} path={<path d="M5 3v18l15-9Z"/>} />;
+const IconCheck = (p) => <Icon {...p} path={<path d="M20 6 9 17l-5-5"/>} />;
+
+/* ============================================================
+   CALCULATION ENGINE — pure, deterministic
+   ============================================================ */
+const DAY = 24 * 60 * 60 * 1000;
+function toDate(d) { return d instanceof Date ? d : new Date(d + "T00:00:00"); }
+function fmtDate(d) { return toDate(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+function fmtDateFull(d) { return toDate(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function round1(n) { return Math.round(n * 10) / 10; }
+function num(n, unit) { return `${Math.round((n || 0) * 10) / 10}${unit ? " " + unit : ""}`; }
+const uid = (p) => p + "-" + Math.random().toString(36).slice(2, 9);
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function parseReps(str) {
+  return String(str).split(/[^0-9]+/).map(s => s.trim()).filter(Boolean).map(Number).filter(n => !isNaN(n));
+}
+function hitsTarget(exercise, reps) {
+  return reps.length >= exercise.targetSets && reps.every(r => r >= exercise.targetReps);
+}
+const SESSIONS_REQUIRED = 2;
+function computeProgression(exercise, workoutLogs) {
+  const direction = exercise.direction || "up";
+  const logs = workoutLogs.filter(l => l.exerciseId === exercise.id && l.weight === exercise.currentWeight).sort((a, b) => b.date.localeCompare(a.date));
+  const recent = logs.slice(0, SESSIONS_REQUIRED);
+  const cleanStreak = [];
+  for (const l of recent) { if (hitsTarget(exercise, l.reps)) cleanStreak.push(l); else break; }
+  const ready = cleanStreak.length >= SESSIONS_REQUIRED;
+  const recommendedWeight = direction === "down" ? round1(exercise.currentWeight - exercise.weightIncrement) : round1(exercise.currentWeight + exercise.weightIncrement);
+  return { ready, cleanCount: cleanStreak.length, required: SESSIONS_REQUIRED, recommendedWeight, lastSession: logs[0] || null };
+}
+
+const MET_TABLE = { "Walking": 3.5, "Running": 9.8, "Cycling": 7.5, "Weight training": 6.0, "Swimming": 7.0, "Elliptical": 5.0, "Yoga": 3.0, "HIIT": 8.0, "Rowing": 7.0, "Basketball": 6.5 };
+// ACSM metabolic equation — accounts for incline, not just a flat MET guess.
+function treadmillMET(speedMph, gradePercent, mode) {
+  const speedMPerMin = speedMph * 26.8224;
+  const grade = gradePercent / 100;
+  const vo2 = mode === "run" ? 0.2 * speedMPerMin + 0.9 * speedMPerMin * grade + 3.5 : 0.1 * speedMPerMin + 1.8 * speedMPerMin * grade + 3.5;
+  return vo2 / 3.5;
+}
+function caloriesFromMET(met, minutes, bodyWeightLb) {
+  const kg = (bodyWeightLb || 170) * 0.453592;
+  return round1((met * 3.5 * kg / 200) * minutes);
+}
+function estimateActivityCalories(entry, bodyWeightLb) {
+  if (entry.isTreadmillIncline) {
+    const met = treadmillMET(entry.speedMph || 3.0, entry.grade || 0, entry.mode || "walk");
+    return caloriesFromMET(met, entry.durationMinutes, bodyWeightLb);
+  }
+  const met = MET_TABLE[entry.activity] || 5.0;
+  return caloriesFromMET(met, entry.durationMinutes, bodyWeightLb);
+}
+
+function computeBMR(sex, age, heightIn, weightLb) {
+  const heightCm = heightIn * 2.54; const weightKg = weightLb * 0.453592;
+  const base = 10 * weightKg + 6.25 * heightCm - 5 * age;
+  return round1(sex === "female" ? base - 161 : base + 5);
+}
+
+function dailyTotals(foodLogs, foods, date) {
+  const entries = foodLogs.filter(l => l.date === date);
+  return entries.reduce((acc, l) => {
+    const f = foods.find(f => f.id === l.foodId); if (!f) return acc;
+    acc.calories += f.calories * l.servings; acc.protein += f.protein * l.servings; acc.carbs += f.carbs * l.servings; acc.fat += f.fat * l.servings;
+    return acc;
+  }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+}
+function dailyBurnedFromActivity(activityLogs, date) { return activityLogs.filter(a => a.date === date).reduce((s, a) => s + a.caloriesBurned, 0); }
+
+// Baseline = BMR × 1.2 (rest + everyday movement). Logged exercise is added
+// on top of that, never folded into a bigger multiplier — so nothing is
+// double-counted between "daily living" and "workout you actually logged."
+function dailyTotalBurn(profile, currentWeightLb, activityLogs, date) {
+  if (!profile.age || !profile.heightIn) return null;
+  const bmr = computeBMR(profile.sex, profile.age, profile.heightIn, currentWeightLb);
+  const baseline = bmr * 1.2;
+  return round1(baseline + dailyBurnedFromActivity(activityLogs, date));
+}
+
+function classifyBalance(deficit, goalType) {
+  if (goalType === "gain") {
+    const surplus = -deficit;
+    if (surplus < 0) return { label: "You're in a deficit while trying to gain — muscle growth will stall.", tone: "negative" };
+    if (surplus < 100) return { label: "Small surplus — gains will be slow.", tone: "warn" };
+    if (surplus <= 500) return { label: "Solid surplus for lean muscle gain.", tone: "positive" };
+    return { label: "Large surplus — expect some fat gain along with the muscle.", tone: "warn" };
+  }
+  if (goalType === "lose") {
+    if (deficit < 0) return { label: "You're in a surplus, not a deficit — this won't lead to fat loss.", tone: "negative" };
+    if (deficit < 300) return { label: "Small deficit — slow, steady progress.", tone: "warn" };
+    if (deficit <= 750) return { label: "Solid deficit for sustainable fat loss (~0.5–1.5 lb/week).", tone: "positive" };
+    return { label: "Large deficit — may be hard to sustain or risk losing muscle.", tone: "warn" };
+  }
+  if (Math.abs(deficit) <= 150) return { label: "Close to maintenance — good territory for body recomposition.", tone: "positive" };
+  return { label: deficit > 0 ? "Running a deficit while trying to maintain." : "Running a surplus while trying to maintain.", tone: "warn" };
+}
+function idealRangeFor(goalType) {
+  if (goalType === "gain") return { min: 100, max: 500, label: "surplus" };
+  if (goalType === "lose") return { min: 300, max: 750, label: "deficit" };
+  return { min: -150, max: 150, label: "balance" };
+}
+
+function computeWeightTrend(logs, days = 14) {
+  const cutoff = Date.now() - days * DAY;
+  const recent = logs.filter(l => toDate(l.date).getTime() >= cutoff).sort((a, b) => a.date.localeCompare(b.date));
+  if (recent.length < 2) return null;
+  const first = recent[0], last = recent[recent.length - 1];
+  const daySpan = Math.max((toDate(last.date) - toDate(first.date)) / DAY, 1);
+  const changeLb = last.weight - first.weight;
+  return { changeLb: round1(changeLb), perWeek: round1(changeLb / (daySpan / 7)), days: Math.round(daySpan) };
+}
+function computeDietAdjustment(avgDeficit, weightTrend, goalType) {
+  if (!weightTrend || avgDeficit == null) return null;
+  const expectedPerWeek = round1(-avgDeficit * 7 / 3500);
+  const diff = weightTrend.perWeek - expectedPerWeek;
+  if (Math.abs(diff) < 0.25) return null;
+  const kcalAdjust = Math.max(25, Math.round(Math.abs(diff) * 3500 / 7 / 25) * 25);
+  if (goalType === "lose") return weightTrend.perWeek > expectedPerWeek
+    ? `Weight isn't dropping as fast as your logged deficit suggests — consider cutting about ${kcalAdjust} more calories/day, or double-check logging.`
+    : `You're losing faster than the math predicts — if that feels too fast, add back about ${kcalAdjust} calories/day.`;
+  if (goalType === "gain") return weightTrend.perWeek < expectedPerWeek
+    ? `You're not gaining as expected — consider adding about ${kcalAdjust} more calories/day.`
+    : `Gaining faster than expected — for leaner gains, consider trimming about ${kcalAdjust} calories/day.`;
+  return null;
+}
+function daysSince(dateStr) { return Math.floor((Date.now() - toDate(dateStr).getTime()) / DAY); }
+
+function scheduleAdherence(schedule, workoutLogs, days = 7) {
+  const recentDates = Array.from({ length: days }, (_, i) => new Date(Date.now() - i * DAY));
+  const scheduledDays = new Set(schedule.map(s => s.day));
+  const scheduledCount = recentDates.filter(d => scheduledDays.has(d.getDay())).length;
+  const loggedDates = new Set(workoutLogs.map(l => l.date));
+  const loggedScheduledCount = recentDates.filter(d => scheduledDays.has(d.getDay()) && loggedDates.has(d.toISOString().slice(0, 10))).length;
+  return { scheduledCount, loggedScheduledCount };
+}
+
+/* ---- AI Coach: calorie/protein suggestion (all arithmetic, shown openly) ---- */
+function computeCoachSuggestion(profile, goalType, trainingDaysPerWeek) {
+  const bmr = computeBMR(profile.sex, profile.age, profile.heightIn, profile.weightLb);
+  const baseline = bmr * 1.2;
+  const assumedSessionBurn = 350; // typical resistance-training session
+  const weeklyExercise = trainingDaysPerWeek * assumedSessionBurn;
+  const maintenance = round1(baseline + weeklyExercise / 7);
+  let calories = maintenance;
+  if (goalType === "lose") calories = maintenance - 500;
+  if (goalType === "gain") calories = maintenance + 300;
+  calories = Math.round(calories);
+  const protein = Math.round(profile.weightLb * 1.0);
+  const fat = Math.round((calories * 0.25) / 9);
+  const carbs = Math.max(0, Math.round((calories - protein * 4 - fat * 9) / 4));
+  return { bmr, baseline: round1(baseline), maintenance, calories, protein, carbs, fat };
+}
+
+/* ---- AI Coach: weekly schedule templates ---- */
+const SCHEDULE_TEMPLATES = {
+  2: [[1, "Full Body A"], [4, "Full Body B"]],
+  3: [[1, "Push"], [3, "Pull"], [5, "Legs"]],
+  4: [[1, "Upper"], [2, "Lower"], [4, "Upper"], [5, "Lower"]],
+  5: [[1, "Push"], [2, "Pull"], [3, "Legs"], [4, "Upper"], [5, "Lower"]],
+  6: [[1, "Push"], [2, "Pull"], [3, "Legs"], [4, "Push"], [5, "Pull"], [6, "Legs"]],
+};
+function generateSchedule(daysPerWeek, time) {
+  const template = SCHEDULE_TEMPLATES[daysPerWeek] || SCHEDULE_TEMPLATES[3];
+  return template.map(([day, label]) => ({ id: uid("sch"), day, time, label }));
+}
+
+/* ---- Quick paste importer for a full workout, cardio finisher included ---- */
+function parseWorkoutPaste(text) {
+  const lines = text.split("\n").map(l => l.trim());
+  let cardioMode = false;
+  const strengthEntries = []; const cardioEntries = [];
+  for (const line of lines) {
+    if (!line) continue;
+    if (/^after\b/i.test(line)) { cardioMode = true; continue; }
+    if (!cardioMode) {
+      const m = line.match(/^(.*?)\s*\(([^)]*)\)\s*([\d][\d\s\-–]*)$/);
+      if (!m) continue;
+      const name = m[1].trim();
+      const weightDesc = m[2].trim();
+      const reps = parseReps(m[3]);
+      const weightMatch = weightDesc.match(/([\d.]+)\s*lb/i);
+      const weight = weightMatch ? parseFloat(weightMatch[1]) : 0;
+      const isAssist = /assist/i.test(weightDesc);
+      const isCompound = /(bench|dead\s?lift|squat|row|press|pull.?up)/i.test(name);
+      strengthEntries.push({
+        name, weightDesc, reps, weight,
+        direction: isAssist ? "down" : "up",
+        weightIncrement: isCompound ? 10 : 5,
+        targetSets: reps.length, targetReps: reps.length ? Math.max(...reps) : 0,
+      });
+    } else {
+      const durMatch = line.match(/([\d.]+)\s*min/i);
+      const gradeMatch = line.match(/([\d.]+)\s*%/);
+      const isTreadmillIncline = /treadmill/i.test(line) && (gradeMatch || /incline/i.test(line));
+      let activityName = "Walking";
+      if (/run/i.test(line)) activityName = "Running";
+      else if (/walk/i.test(line)) activityName = "Walking";
+      else if (/cycl|bike/i.test(line)) activityName = "Cycling";
+      cardioEntries.push({ raw: line, durationMinutes: durMatch ? parseFloat(durMatch[1]) : 30, grade: gradeMatch ? parseFloat(gradeMatch[1]) : 0, isTreadmillIncline, activityName });
+    }
+  }
+  return { strengthEntries, cardioEntries };
+}
+
+/* ============================================================
+   PERSISTENCE
+   ============================================================ */
+const DEFAULT_STATE = {
+  exercises: [
+    { id: "ex-1", name: "Deadlift", targetSets: 3, targetReps: 15, weightIncrement: 10, currentWeight: 135, direction: "up", restSeconds: 90, sortOrder: 0, weightNote: "" },
+  ],
+  workoutLogs: [],
+  bodyWeightLogs: [],
+  schedule: [
+    { id: "sch-1", day: 1, time: "17:30", label: "Upper body" },
+    { id: "sch-2", day: 3, time: "17:30", label: "Lower body" },
+    { id: "sch-3", day: 5, time: "10:00", label: "Full body" },
+  ],
+  foods: [
+    { id: "food-1", name: "Chicken breast", servingLabel: "100 g", calories: 165, protein: 31, carbs: 0, fat: 3.6 },
+    { id: "food-2", name: "White rice, cooked", servingLabel: "1 cup", calories: 205, protein: 4.3, carbs: 45, fat: 0.4 },
+  ],
+  foodLogs: [],
+  activityLogs: [],
+  goals: { dailyCalories: 2200, dailyProtein: 150, dailyCarbs: 220, dailyFat: 70 },
+  profile: { sex: "male", age: "", heightIn: "", weightLb: "" },
+  goalType: "recomp",
+};
+
+const LOCAL_STORAGE_KEY = "iron-and-table-state-v2";
+
+function useAppState() {
+  const [state, setState] = useState(DEFAULT_STATE);
+  const [loaded, setLoaded] = useState(false);
+  const saveTimer = useRef(null);
+
+  useEffect(() => {
+    let initial = DEFAULT_STATE;
+    try {
+      const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (raw) { const parsed = JSON.parse(raw); initial = { ...DEFAULT_STATE, ...parsed, profile: { ...DEFAULT_STATE.profile, ...(parsed.profile || {}) }, goals: { ...DEFAULT_STATE.goals, ...(parsed.goals || {}) } }; }
+    } catch (e) { /* no saved state yet, or storage unavailable */ }
+    setState(initial);
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      try { window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state)); }
+      catch (e) { /* storage full or disabled — data stays in memory for this session */ }
+    }, 400);
+  }, [state, loaded]);
+
+  return [state, setState, loaded];
+}
+
+/* ============================================================
+   SHARED UI ATOMS — bright, bold, rounded
+   ============================================================ */
+function Rule() { return <div style={{ borderTop: "1px solid var(--rule)" }} />; }
+function StatLine({ label, value, tone = "ink", size = "md" }) {
+  const colors = { ink: "var(--ink)", positive: "var(--positive)", negative: "var(--negative)", muted: "var(--muted)", warn: "var(--warn)", primary: "var(--primary)" };
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "10px 0" }}>
+      <span style={{ color: "var(--muted)", fontSize: 14, fontWeight: 600 }}>{label}</span>
+      <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 800, color: colors[tone], fontSize: size === "lg" ? 26 : size === "xl" ? 34 : 16, fontFamily: "var(--font-display)" }}>{value}</span>
+    </div>
+  );
+}
+function Tag({ children, tone = "ink" }) {
+  const map = { ink: { bg: "var(--ink)", fg: "var(--bg)" }, ready: { bg: "var(--positive)", fg: "#fff" }, warn: { bg: "var(--warn)", fg: "#fff" }, negative: { bg: "var(--negative)", fg: "#fff" }, primary: { bg: "var(--primary)", fg: "#fff" } };
+  const c = map[tone] || map.ink;
+  return <span style={{ background: c.bg, color: c.fg, fontSize: 11.5, padding: "4px 10px", borderRadius: 20, fontWeight: 800, letterSpacing: 0.2, whiteSpace: "nowrap" }}>{children}</span>;
+}
+function Btn({ children, onClick, variant = "primary", icon: IconComp, small, disabled, full }) {
+  const base = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, cursor: disabled ? "default" : "pointer", fontWeight: 800, borderRadius: 999, border: "none", fontSize: small ? 13.5 : 15, padding: small ? "8px 14px" : "12px 22px", transition: "transform .1s, opacity .15s", opacity: disabled ? 0.45 : 1, width: full ? "100%" : "auto" };
+  const styles = { primary: { background: "var(--primary)", color: "#fff" }, teal: { background: "var(--teal)", color: "#fff" }, ghost: { background: "var(--surface)", color: "var(--ink)", border: "2px solid var(--rule)" }, link: { background: "transparent", color: "var(--ink)", padding: 0, borderRadius: 0, textDecoration: "underline", textUnderlineOffset: 3, fontWeight: 700 } };
+  return <button disabled={disabled} onClick={onClick} style={{ ...base, ...styles[variant] }}>{IconComp && <IconComp size={small ? 14 : 16} />}{children}</button>;
+}
+function Field({ label, children }) { return <label style={{ display: "block", marginBottom: 14 }}><div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 6, fontWeight: 700 }}>{label}</div>{children}</label>; }
+const inputStyle = { width: "100%", boxSizing: "border-box", border: "2px solid var(--rule)", borderRadius: 12, padding: "10px 12px", fontSize: 15, background: "var(--surface)", color: "var(--ink)", fontWeight: 600 };
+function Card({ children, style }) { return <div style={{ border: "2px solid var(--rule)", borderRadius: 18, padding: 16, background: "var(--surface)", ...style }}>{children}</div>; }
+function Modal({ title, onClose, children, wide }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(20,15,30,0.5)", zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "var(--bg)", width: "100%", maxWidth: wide ? 560 : 440, borderRadius: "24px 24px 0 0", padding: "22px 20px 30px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 -8px 40px rgba(0,0,0,0.3)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+          <h3 style={{ margin: 0, fontSize: 21, fontWeight: 800, fontFamily: "var(--font-display)" }}>{title}</h3>
+          <button onClick={onClose} style={{ background: "var(--surface)", border: "none", borderRadius: 999, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--ink)" }}><IconX size={18} /></button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+function SectionHeader({ eyebrow, title, action }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 16, gap: 10, flexWrap: "wrap" }}>
+      <div>{eyebrow && <div style={{ fontSize: 12.5, color: "var(--primary)", marginBottom: 3, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5 }}>{eyebrow}</div>}<h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, fontFamily: "var(--font-display)" }}>{title}</h2></div>
+      {action}
+    </div>
+  );
+}
+
+/* ============================================================
+   MINI CHARTS
+   ============================================================ */
+const PALETTE = ["#FF5A36", "#00B8A0", "#FFC93C", "#7C6BFF", "#FF4D6D", "#6B6350"];
+function PieChart({ data, size = 130 }) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  if (total <= 0) return <div style={{ fontSize: 13, color: "var(--muted)" }}>No data yet.</div>;
+  let angle = -90; const r = size / 2;
+  const slices = data.map((d, i) => {
+    const frac = d.value / total; const start = angle; const end = angle + frac * 360; angle = end;
+    const largeArc = end - start > 180 ? 1 : 0;
+    const toXY = (deg) => { const rad = (deg * Math.PI) / 180; return [r + r * Math.cos(rad), r + r * Math.sin(rad)]; };
+    const [x1, y1] = toXY(start); const [x2, y2] = toXY(end);
+    const path = frac >= 0.9995 ? `M${r},0 A${r},${r} 0 1 1 ${r - 0.01},0 Z` : `M${r},${r} L${x1},${y1} A${r},${r} 0 ${largeArc} 1 ${x2},${y2} Z`;
+    return { path, color: PALETTE[i % PALETTE.length], label: d.label, value: d.value, pct: round1(frac * 100) };
+  });
+  return (
+    <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>{slices.map((s, i) => <path key={i} d={s.path} fill={s.color} />)}</svg>
+      <div style={{ fontSize: 12.5, display: "flex", flexDirection: "column", gap: 5, fontWeight: 600 }}>
+        {slices.map((s, i) => <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 4, background: s.color }} />{s.label} — {num(s.value)} ({s.pct}%)</div>)}
+      </div>
+    </div>
+  );
+}
+function LineChart({ points, width = 320, height = 120, color = "var(--teal)", unit = "" }) {
+  if (points.length === 0) return <div style={{ fontSize: 13, color: "var(--muted)" }}>No history yet.</div>;
+  const values = points.map(p => p.y);
+  const min = Math.min(...values), max = Math.max(...values);
+  const pad = 16; const range = max - min || 1;
+  const xStep = points.length > 1 ? (width - pad * 2) / (points.length - 1) : 0;
+  const coords = points.map((p, i) => [pad + i * xStep, height - pad - ((p.y - min) / range) * (height - pad * 2)]);
+  const pathD = coords.map((c, i) => (i === 0 ? "M" : "L") + c[0] + "," + c[1]).join(" ");
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: "100%" }}>
+      <path d={pathD} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" />
+      {coords.map((c, i) => <circle key={i} cx={c[0]} cy={c[1]} r="3" fill={color} />)}
+      <text x={pad} y={height - 2} fontSize="10" fill="var(--muted)">{fmtDate(points[0].x)}</text>
+      <text x={width - pad} y={height - 2} fontSize="10" fill="var(--muted)" textAnchor="end">{fmtDate(points[points.length - 1].x)}</text>
+      <text x={width - pad} y={14} fontSize="12" fill={color} textAnchor="end" fontWeight="800">{num(values[values.length - 1], unit)}</text>
+    </svg>
+  );
+}
+// Bar chart for daily deficit/surplus, with a shaded "ideal range" band.
+function BalanceChart({ points, idealRange, width = 320, height = 150 }) {
+  if (points.length === 0) return <div style={{ fontSize: 13, color: "var(--muted)" }}>No data yet — log food and activity to see this.</div>;
+  const pad = 20;
+  const values = points.map(p => p.y);
+  const maxAbs = Math.max(...values.map(v => Math.abs(v)), idealRange.max, 200);
+  const usableH = height - pad * 2;
+  const mid = height / 2;
+  const scale = usableH / 2 / maxAbs;
+  const barW = (width - pad * 2) / points.length * 0.6;
+  const step = (width - pad * 2) / points.length;
+  const bandTop = mid - idealRange.max * scale;
+  const bandBottom = mid - idealRange.min * scale;
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: "100%" }}>
+      <rect x={pad} y={Math.min(bandTop, bandBottom)} width={width - pad * 2} height={Math.abs(bandBottom - bandTop)} fill="var(--positive)" opacity="0.12" />
+      <line x1={pad} x2={width - pad} y1={mid} y2={mid} stroke="var(--muted)" strokeWidth="1" opacity="0.4" />
+      {points.map((p, i) => {
+        const x = pad + i * step + (step - barW) / 2;
+        const barH = Math.abs(p.y) * scale;
+        const y = p.y >= 0 ? mid - barH : mid;
+        const inRange = p.y >= idealRange.min && p.y <= idealRange.max;
+        const color = p.y < 0 ? "var(--negative)" : inRange ? "var(--positive)" : "var(--warn)";
+        return <rect key={i} x={x} y={y} width={barW} height={Math.max(barH, 1)} fill={color} rx="3" />;
+      })}
+      <text x={pad} y={height - 2} fontSize="10" fill="var(--muted)">{fmtDate(points[0].x)}</text>
+      <text x={width - pad} y={height - 2} fontSize="10" fill="var(--muted)" textAnchor="end">{fmtDate(points[points.length - 1].x)}</text>
+    </svg>
+  );
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function Dashboard({ state, setState, onStartGuided }) {
+  const today = todayStr();
+  const todayDow = new Date().getDay();
+  const todaysPlan = state.schedule.filter(s => s.day === todayDow);
+  const totals = dailyTotals(state.foodLogs, state.foods, today);
+  const burned = dailyBurnedFromActivity(state.activityLogs, today);
+  const readyExercises = state.exercises.map(ex => ({ ex, prog: computeProgression(ex, state.workoutLogs) })).filter(x => x.prog.ready);
+  const adherence = scheduleAdherence(state.schedule, state.workoutLogs, 7);
+  const latestBW = [...state.bodyWeightLogs].sort((a, b) => b.date.localeCompare(a.date))[0];
+  const currentWeight = latestBW?.weight || (parseFloat(state.profile.weightLb) || null);
+  const totalBurn = currentWeight ? dailyTotalBurn(state.profile, currentWeight, state.activityLogs, today) : null;
+  const deficit = totalBurn != null ? round1(totalBurn - totals.calories) : null;
+  const balance = deficit != null ? classifyBalance(deficit, state.goalType) : null;
+  const [bw, setBw] = useState("");
+  const overdue = !latestBW || daysSince(latestBW.date) >= 4;
+
+  const logBodyWeight = () => { const v = parseFloat(bw); if (!v) return; setState(s => ({ ...s, bodyWeightLogs: [...s.bodyWeightLogs, { id: uid("bw"), date: today, weight: v }] })); setBw(""); };
+
+  return (
+    <div>
+      <SectionHeader eyebrow="Today" title={fmtDateFull(new Date())} />
+
+      <Btn full icon={IconPlay} onClick={onStartGuided}>Start guided workout</Btn>
+      <div style={{ height: 16 }} />
+
+      {readyExercises.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+          {readyExercises.map(({ ex, prog }) => (
+            <div key={ex.id} style={{ display: "flex", gap: 10, padding: "14px 16px", background: "var(--positive)", borderRadius: 16, color: "#fff" }}>
+              <IconArrowUp size={20} style={{ flexShrink: 0, marginTop: 1 }} />
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{ex.name}: two clean sessions at {ex.currentWeight} lb — time to move to <b>{prog.recommendedWeight} lb</b>!</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {overdue && (
+        <div style={{ display: "flex", gap: 10, padding: "14px 16px", background: "var(--yellow)", borderRadius: 16, marginBottom: 16, color: "#4A3200" }}>
+          <IconScale size={20} style={{ flexShrink: 0 }} />
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{latestBW ? `It's been ${daysSince(latestBW.date)} days since your last weigh-in.` : "You haven't logged a body weight yet."} Weigh in today to keep your progress accurate.</div>
+        </div>
+      )}
+
+      <Card style={{ marginBottom: 16 }}>
+        <StatLine label="Today's gym plan" value={todaysPlan.length ? todaysPlan.map(p => p.label).join(", ") : "Rest day"} />
+        <Rule />
+        <StatLine label="Calories eaten" value={num(totals.calories)} />
+        <StatLine label="Calorie goal" value={num(state.goals.dailyCalories)} tone="muted" />
+        <StatLine label="Protein" value={`${num(totals.protein)} / ${num(state.goals.dailyProtein)} g`} tone={totals.protein >= state.goals.dailyProtein ? "positive" : "muted"} />
+        {totalBurn != null && <StatLine label="Total burned today (idle + activity)" value={num(totalBurn)} />}
+      </Card>
+
+      {balance && (
+        <Card style={{ marginBottom: 16, background: balance.tone === "positive" ? "var(--positive)" : balance.tone === "negative" ? "var(--negative)" : "var(--warn)", border: "none", color: "#fff" }}>
+          <div style={{ fontSize: 13, fontWeight: 800, textTransform: "uppercase", opacity: 0.85, marginBottom: 4 }}>Today's balance</div>
+          <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "var(--font-display)", marginBottom: 4 }}>{deficit >= 0 ? `${num(deficit)} cal deficit` : `${num(-deficit)} cal surplus`}</div>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{balance.label}</div>
+        </Card>
+      )}
+      {totalBurn == null && (
+        <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 16 }}>Fill in your profile in the Coach tab to see your idle calorie burn and daily balance automatically.</div>
+      )}
+
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: 14, fontWeight: 800 }}>Body weight</div>
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>{latestBW ? `Last: ${num(latestBW.weight, "lb")} on ${fmtDate(latestBW.date)}` : "Not logged yet"}</div>
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+          <input style={inputStyle} type="number" placeholder="Today's weight (lb)" value={bw} onChange={e => setBw(e.target.value)} />
+          <Btn small onClick={logBodyWeight}>Log</Btn>
+        </div>
+      </Card>
+
+      <SectionHeader title="How it's going" />
+      <ul style={{ paddingLeft: 18, margin: 0, fontSize: 14.5, lineHeight: 2, fontWeight: 500 }}>
+        <li>You've logged workouts on <b>{adherence.loggedScheduledCount}</b> of <b>{adherence.scheduledCount}</b> scheduled gym days this week.</li>
+        {readyExercises.length === 0 && <li>No exercises are ready for a weight increase right now — keep logging consistently.</li>}
+      </ul>
+    </div>
+  );
+}
+
+/* ============================================================
+   EXERCISES
+   ============================================================ */
+function ExerciseForm({ onSave, onClose, initial }) {
+  const [f, setF] = useState(initial || { name: "", targetSets: "3", targetReps: "10", weightIncrement: "5", currentWeight: "", direction: "up", restSeconds: "90", weightNote: "" });
+  const save = () => {
+    if (!f.name || !f.targetSets || !f.targetReps || f.currentWeight === "") return;
+    onSave({ id: initial?.id || uid("ex"), name: f.name, targetSets: parseInt(f.targetSets), targetReps: parseInt(f.targetReps), weightIncrement: parseFloat(f.weightIncrement), currentWeight: parseFloat(f.currentWeight), direction: f.direction, restSeconds: parseInt(f.restSeconds) || 90, weightNote: f.weightNote || "", sortOrder: initial?.sortOrder ?? Date.now() });
+    onClose();
+  };
+  return (
+    <Modal title={initial ? "Edit exercise" : "Add exercise"} onClose={onClose}>
+      <Field label="Exercise name"><input style={inputStyle} value={f.name} onChange={e => setF(s => ({ ...s, name: e.target.value }))} placeholder="e.g. Deadlift" /></Field>
+      <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ flex: 1 }}><Field label="Target sets"><input style={inputStyle} type="number" value={f.targetSets} onChange={e => setF(s => ({ ...s, targetSets: e.target.value }))} /></Field></div>
+        <div style={{ flex: 1 }}><Field label="Target reps/set"><input style={inputStyle} type="number" value={f.targetReps} onChange={e => setF(s => ({ ...s, targetReps: e.target.value }))} /></Field></div>
+      </div>
+      <Field label="Weight increment when you progress">
+        <div style={{ display: "flex", gap: 8 }}>
+          {[5, 10].map(v => <button key={v} onClick={() => setF(s => ({ ...s, weightIncrement: String(v) }))} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "2px solid var(--rule)", background: String(f.weightIncrement) === String(v) ? "var(--primary)" : "var(--surface)", color: String(f.weightIncrement) === String(v) ? "#fff" : "var(--ink)", cursor: "pointer", fontWeight: 800 }}>{v} lb</button>)}
+          <input style={{ ...inputStyle, flex: 1 }} type="number" placeholder="custom" value={f.weightIncrement} onChange={e => setF(s => ({ ...s, weightIncrement: e.target.value }))} />
+        </div>
+      </Field>
+      <Field label="Current working weight (lb)"><input style={inputStyle} type="number" value={f.currentWeight} onChange={e => setF(s => ({ ...s, currentWeight: e.target.value }))} /></Field>
+      <Field label="Progression direction">
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => setF(s => ({ ...s, direction: "up" }))} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "2px solid var(--rule)", background: f.direction === "up" ? "var(--primary)" : "var(--surface)", color: f.direction === "up" ? "#fff" : "var(--ink)", cursor: "pointer", fontWeight: 700 }}>Heavier = harder</button>
+          <button onClick={() => setF(s => ({ ...s, direction: "down" }))} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "2px solid var(--rule)", background: f.direction === "down" ? "var(--primary)" : "var(--surface)", color: f.direction === "down" ? "#fff" : "var(--ink)", cursor: "pointer", fontWeight: 700 }}>Lighter = harder</button>
+        </div>
+        <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 4 }}>Use "Lighter = harder" for assisted machines (less assist is harder).</div>
+      </Field>
+      <Field label="Rest between sets (seconds)"><input style={inputStyle} type="number" value={f.restSeconds} onChange={e => setF(s => ({ ...s, restSeconds: e.target.value }))} /></Field>
+      <Field label="Weight note (optional — e.g. bar + plate breakdown)"><input style={inputStyle} value={f.weightNote} onChange={e => setF(s => ({ ...s, weightNote: e.target.value }))} placeholder="e.g. 100lb-40lb weight" /></Field>
+      <Btn full onClick={save}>{initial ? "Save changes" : "Add exercise"}</Btn>
+    </Modal>
+  );
+}
+
+function LogWorkoutModal({ exercise, onClose, onSave }) {
+  const [date, setDate] = useState(todayStr());
+  const [weight, setWeight] = useState(exercise.currentWeight);
+  const [repsStr, setRepsStr] = useState("");
+  const reps = parseReps(repsStr);
+  const willHit = reps.length > 0 && hitsTarget(exercise, reps);
+  const save = () => { if (reps.length === 0) return; onSave({ id: uid("wl"), date, exerciseId: exercise.id, weight: parseFloat(weight), reps }); onClose(); };
+  return (
+    <Modal title={`Log ${exercise.name}`} onClose={onClose}>
+      <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 12, fontWeight: 600 }}>Target: {exercise.targetSets} sets × {exercise.targetReps} reps at {exercise.currentWeight} lb.</div>
+      <Field label="Date"><input style={inputStyle} type="date" value={date} onChange={e => setDate(e.target.value)} /></Field>
+      <Field label="Weight used (lb)"><input style={inputStyle} type="number" value={weight} onChange={e => setWeight(e.target.value)} /></Field>
+      <Field label='Reps per set — e.g. "15-14-11"'><input style={{ ...inputStyle, fontFamily: "var(--font-mono)" }} value={repsStr} onChange={e => setRepsStr(e.target.value)} placeholder="15-15-15" /></Field>
+      {reps.length > 0 && <div style={{ fontSize: 13.5, marginBottom: 14, fontWeight: 700, color: willHit ? "var(--positive)" : "var(--muted)" }}>Parsed: {reps.join(", ")} {willHit ? "— meets target 🎯" : "— below target"}</div>}
+      <Btn full onClick={save} disabled={reps.length === 0}>Save workout</Btn>
+    </Modal>
+  );
+}
+
+// Paste-in importer: turns a full workout dump into exercises + logs + cardio.
+function QuickImportModal({ onClose, existingExercises, onImport }) {
+  const [text, setText] = useState("");
+  const [parsed, setParsed] = useState(null);
+  const parse = () => setParsed(parseWorkoutPaste(text));
+  return (
+    <Modal title="Paste today's workout" onClose={onClose} wide>
+      <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 10, fontWeight: 600 }}>
+        Paste it in the same style you'd write it — one exercise per line with weight in parentheses and reps after, an "AFTER" line, then cardio. We'll parse it and let you confirm before anything is saved.
+      </div>
+      <textarea style={{ ...inputStyle, minHeight: 160, fontFamily: "var(--font-mono)", fontSize: 13 }} value={text} onChange={e => setText(e.target.value)} placeholder={"Bench press (100lb-40lb weight) 15-11-11\nDead lift (135lb-45lb weight) 15-15-15\n\nAFTER\n\n30 mins incline treadmill 15% grade"} />
+      <div style={{ height: 12 }} />
+      <Btn onClick={parse}>Parse</Btn>
+      {parsed && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontWeight: 800, marginBottom: 8 }}>Strength ({parsed.strengthEntries.length})</div>
+          {parsed.strengthEntries.map((e, i) => {
+            const existing = existingExercises.find(ex => ex.name.toLowerCase() === e.name.toLowerCase());
+            return (
+              <div key={i} style={{ fontSize: 13, padding: "6px 0", borderBottom: "1px solid var(--rule)" }}>
+                <b>{e.name}</b> — {e.weightDesc || `${e.weight} lb`} — reps {e.reps.join("-")} {existing ? "(existing exercise, will just log)" : "(new exercise, will be created)"}
+              </div>
+            );
+          })}
+          <div style={{ fontWeight: 800, margin: "12px 0 8px" }}>Cardio ({parsed.cardioEntries.length})</div>
+          {parsed.cardioEntries.map((c, i) => <div key={i} style={{ fontSize: 13, padding: "6px 0", borderBottom: "1px solid var(--rule)" }}>{c.activityName}{c.isTreadmillIncline ? ` (incline ${c.grade}%, assuming 3.0 mph — edit after import if different)` : ""} — {c.durationMinutes} min</div>)}
+          {parsed.strengthEntries.length === 0 && parsed.cardioEntries.length === 0 && <div style={{ fontSize: 13, color: "var(--muted)" }}>Nothing recognized — check the format and try again.</div>}
+          <div style={{ height: 14 }} />
+          <Btn full variant="teal" onClick={() => { onImport(parsed); onClose(); }} disabled={parsed.strengthEntries.length === 0 && parsed.cardioEntries.length === 0}>Confirm &amp; log everything</Btn>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function Exercises({ state, setState, onStartGuided }) {
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [logging, setLogging] = useState(null);
+  const [importing, setImporting] = useState(false);
+
+  const addExercise = (ex) => setState(s => ({ ...s, exercises: [...s.exercises, ex] }));
+  const updateExercise = (ex) => setState(s => ({ ...s, exercises: s.exercises.map(e => e.id === ex.id ? ex : e) }));
+  const removeExercise = (id) => setState(s => ({ ...s, exercises: s.exercises.filter(e => e.id !== id), workoutLogs: s.workoutLogs.filter(l => l.exerciseId !== id) }));
+  const addLog = (log) => setState(s => ({ ...s, workoutLogs: [...s.workoutLogs, log] }));
+  const applyIncrease = (ex, newWeight) => setState(s => ({ ...s, exercises: s.exercises.map(e => e.id === ex.id ? { ...e, currentWeight: newWeight } : e) }));
+  const move = (ex, dir) => {
+    const sorted = [...state.exercises].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const idx = sorted.findIndex(e => e.id === ex.id);
+    const swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const a = sorted[idx], b = sorted[swapIdx];
+    const tmp = a.sortOrder ?? idx; setState(s => ({ ...s, exercises: s.exercises.map(e => e.id === a.id ? { ...e, sortOrder: b.sortOrder ?? swapIdx } : e.id === b.id ? { ...e, sortOrder: tmp } : e) }));
+  };
+
+  const doImport = (parsed) => {
+    setState(s => {
+      let exercises = [...s.exercises];
+      let workoutLogs = [...s.workoutLogs];
+      let activityLogs = [...s.activityLogs];
+      const currentWeight = [...s.bodyWeightLogs].sort((a, b) => b.date.localeCompare(a.date))[0]?.weight || parseFloat(s.profile.weightLb) || 170;
+      parsed.strengthEntries.forEach(e => {
+        let ex = exercises.find(x => x.name.toLowerCase() === e.name.toLowerCase());
+        if (!ex) {
+          ex = { id: uid("ex"), name: e.name, targetSets: e.targetSets || 3, targetReps: e.targetReps || 10, weightIncrement: e.weightIncrement, currentWeight: e.weight, direction: e.direction, restSeconds: 90, sortOrder: Date.now() + Math.random(), weightNote: e.weightDesc };
+          exercises.push(ex);
+        }
+        workoutLogs.push({ id: uid("wl"), date: todayStr(), exerciseId: ex.id, weight: e.weight, reps: e.reps });
+      });
+      parsed.cardioEntries.forEach(c => {
+        const cal = estimateActivityCalories({ isTreadmillIncline: c.isTreadmillIncline, speedMph: 3.0, grade: c.grade, mode: "walk", durationMinutes: c.durationMinutes, activity: c.activityName }, currentWeight);
+        activityLogs.push({ id: uid("act"), date: todayStr(), activity: c.isTreadmillIncline ? `Treadmill incline (${c.grade}%)` : c.activityName, durationMinutes: c.durationMinutes, caloriesBurned: cal });
+      });
+      return { ...s, exercises, workoutLogs, activityLogs };
+    });
+  };
+
+  const sorted = [...state.exercises].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+  return (
+    <div>
+      <SectionHeader eyebrow="Set up once, log every session" title="Exercises" action={<div style={{ display: "flex", gap: 8 }}><Btn small variant="ghost" onClick={() => setImporting(true)}>Paste workout</Btn><Btn small icon={IconPlus} onClick={() => setAdding(true)}>Add</Btn></div>} />
+      <Btn full variant="teal" icon={IconPlay} onClick={onStartGuided}>Start guided workout</Btn>
+      <div style={{ height: 18 }} />
+      {sorted.length === 0 && <div style={{ fontSize: 14, color: "var(--muted)", padding: "20px 0" }}>No exercises yet — add one, or paste a workout above.</div>}
+      {sorted.map((ex, i) => {
+        const prog = computeProgression(ex, state.workoutLogs);
+        const logs = state.workoutLogs.filter(l => l.exerciseId === ex.id).sort((a, b) => b.date.localeCompare(a.date));
+        return (
+          <Card key={ex.id} style={{ marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 16 }}>{ex.name}</div>
+                <div style={{ fontSize: 12.5, color: "var(--muted)", fontWeight: 600 }}>{ex.targetSets} × {ex.targetReps} @ {ex.currentWeight} lb{ex.weightNote ? ` (${ex.weightNote})` : ""} · {ex.direction === "down" ? "−" : "+"}{ex.weightIncrement} lb when ready</div>
+              </div>
+              {prog.ready ? <Tag tone="ready">ready!</Tag> : <Tag tone="warn">{prog.cleanCount}/{prog.required}</Tag>}
+            </div>
+            {logs[0] && <div style={{ fontSize: 13, marginTop: 8, fontFamily: "var(--font-mono)" }}>Last: {fmtDate(logs[0].date)} — {logs[0].reps.join("-")} @ {logs[0].weight} lb</div>}
+            {prog.ready && <div style={{ marginTop: 10 }}><Btn small variant="primary" icon={ex.direction === "down" ? IconArrowDown : IconArrowUp} onClick={() => applyIncrease(ex, prog.recommendedWeight)}>Move to {prog.recommendedWeight} lb</Btn></div>}
+            <div style={{ display: "flex", gap: 14, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
+              <Btn variant="link" small onClick={() => setLogging(ex)}>Log today</Btn>
+              <Btn variant="link" small icon={IconEdit} onClick={() => setEditing(ex)}>Edit</Btn>
+              <Btn variant="link" small icon={IconTrash} onClick={() => removeExercise(ex.id)}>Remove</Btn>
+              <div style={{ display: "flex", gap: 4, marginLeft: "auto" }}>
+                <button onClick={() => move(ex, -1)} disabled={i === 0} style={{ background: "var(--bg)", border: "1px solid var(--rule)", borderRadius: 8, width: 26, height: 26, cursor: "pointer" }}>↑</button>
+                <button onClick={() => move(ex, 1)} disabled={i === sorted.length - 1} style={{ background: "var(--bg)", border: "1px solid var(--rule)", borderRadius: 8, width: 26, height: 26, cursor: "pointer" }}>↓</button>
+              </div>
+            </div>
+          </Card>
+        );
+      })}
+      {adding && <ExerciseForm onClose={() => setAdding(false)} onSave={addExercise} />}
+      {editing && <ExerciseForm initial={{ ...editing, targetSets: String(editing.targetSets), targetReps: String(editing.targetReps), weightIncrement: String(editing.weightIncrement), currentWeight: String(editing.currentWeight), restSeconds: String(editing.restSeconds || 90) }} onClose={() => setEditing(null)} onSave={updateExercise} />}
+      {logging && <LogWorkoutModal exercise={logging} onClose={() => setLogging(null)} onSave={addLog} />}
+      {importing && <QuickImportModal existingExercises={state.exercises} onClose={() => setImporting(false)} onImport={doImport} />}
+    </div>
+  );
+}
+
+/* ============================================================
+   PROGRESS
+   ============================================================ */
+function Progress({ state, onExport }) {
+  const trend = computeWeightTrend(state.bodyWeightLogs, 14);
+  const latestBW = [...state.bodyWeightLogs].sort((a, b) => b.date.localeCompare(a.date))[0];
+  const overdue = !latestBW || daysSince(latestBW.date) >= 4;
+
+  return (
+    <div>
+      <SectionHeader eyebrow="Weight and reps over time" title="Progress" action={<Btn small variant="ghost" icon={IconPrinter} onClick={onExport}>Export PDF</Btn>} />
+
+      <Card style={{ marginBottom: 16 }}>
+        <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 8 }}>Body weight</div>
+        <LineChart points={state.bodyWeightLogs.slice().sort((a, b) => a.date.localeCompare(b.date)).map(l => ({ x: l.date, y: l.weight }))} unit="lb" color="var(--primary)" />
+        <div style={{ marginTop: 10, fontSize: 13.5, fontWeight: 600 }}>
+          {trend ? `Over the last ${trend.days} days: ${trend.changeLb >= 0 ? "+" : ""}${trend.changeLb} lb (${trend.perWeek >= 0 ? "+" : ""}${trend.perWeek} lb/week).` : "Log at least two weigh-ins a week or more apart to see a trend."}
+        </div>
+        <div style={{ fontSize: 13, color: overdue ? "var(--negative)" : "var(--muted)", marginTop: 4, fontWeight: 600 }}>
+          {overdue ? `Overdue for a weigh-in — it's been ${latestBW ? daysSince(latestBW.date) : "a while"} days.` : `Last weighed in ${daysSince(latestBW.date)} day(s) ago.`} For a reliable trend, weigh in every 3–4 days at the same time (e.g. right after waking).
+        </div>
+      </Card>
+
+      {state.exercises.map(ex => {
+        const logs = state.workoutLogs.filter(l => l.exerciseId === ex.id).sort((a, b) => a.date.localeCompare(b.date));
+        const points = logs.map(l => ({ x: l.date, y: l.weight }));
+        return (
+          <Card key={ex.id} style={{ marginBottom: 16 }}>
+            <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 8 }}>{ex.name}</div>
+            <LineChart points={points} unit="lb" />
+            <div style={{ marginTop: 10, maxHeight: 160, overflowY: "auto" }}>
+              {logs.slice().reverse().map(l => (
+                <div key={l.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, padding: "5px 0", borderBottom: "1px solid var(--rule)", fontFamily: "var(--font-mono)" }}>
+                  <span>{fmtDate(l.date)}</span><span>{l.weight} lb</span><span>{l.reps.join("-")}</span>
+                </div>
+              ))}
+              {logs.length === 0 && <div style={{ fontSize: 13, color: "var(--muted)" }}>No sessions logged yet.</div>}
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ============================================================
+   NUTRITION
+   ============================================================ */
+function FoodForm({ onSave, onClose }) {
+  const [f, setF] = useState({ name: "", servingLabel: "", calories: "", protein: "", carbs: "", fat: "" });
+  const save = () => { if (!f.name || f.calories === "") return; onSave({ id: uid("food"), name: f.name, servingLabel: f.servingLabel || "1 serving", calories: parseFloat(f.calories) || 0, protein: parseFloat(f.protein) || 0, carbs: parseFloat(f.carbs) || 0, fat: parseFloat(f.fat) || 0 }); onClose(); };
+  return (
+    <Modal title="Add food to library" onClose={onClose}>
+      <Field label="Food name"><input style={inputStyle} value={f.name} onChange={e => setF(s => ({ ...s, name: e.target.value }))} placeholder="e.g. Greek yogurt" /></Field>
+      <Field label="Serving size label"><input style={inputStyle} value={f.servingLabel} onChange={e => setF(s => ({ ...s, servingLabel: e.target.value }))} placeholder="e.g. 1 cup, 100 g" /></Field>
+      <div style={{ display: "flex", gap: 10 }}><div style={{ flex: 1 }}><Field label="Calories"><input style={inputStyle} type="number" value={f.calories} onChange={e => setF(s => ({ ...s, calories: e.target.value }))} /></Field></div><div style={{ flex: 1 }}><Field label="Protein (g)"><input style={inputStyle} type="number" value={f.protein} onChange={e => setF(s => ({ ...s, protein: e.target.value }))} /></Field></div></div>
+      <div style={{ display: "flex", gap: 10 }}><div style={{ flex: 1 }}><Field label="Carbs (g)"><input style={inputStyle} type="number" value={f.carbs} onChange={e => setF(s => ({ ...s, carbs: e.target.value }))} /></Field></div><div style={{ flex: 1 }}><Field label="Fat (g)"><input style={inputStyle} type="number" value={f.fat} onChange={e => setF(s => ({ ...s, fat: e.target.value }))} /></Field></div></div>
+      <Btn full onClick={save}>Add to library</Btn>
+    </Modal>
+  );
+}
+function LogFoodModal({ foods, onClose, onSave }) {
+  const [foodId, setFoodId] = useState(foods[0]?.id || "");
+  const [servings, setServings] = useState("1");
+  const [mealType, setMealType] = useState("Breakfast");
+  const [date, setDate] = useState(todayStr());
+  const save = () => { if (!foodId) return; onSave({ id: uid("fl"), date, foodId, servings: parseFloat(servings) || 1, mealType }); onClose(); };
+  return (
+    <Modal title="Log food" onClose={onClose}>
+      <Field label="Food"><select style={inputStyle} value={foodId} onChange={e => setFoodId(e.target.value)}>{foods.map(f => <option key={f.id} value={f.id}>{f.name} ({f.servingLabel})</option>)}</select></Field>
+      <Field label="Servings"><input style={inputStyle} type="number" step="0.25" value={servings} onChange={e => setServings(e.target.value)} /></Field>
+      <Field label="Meal"><select style={inputStyle} value={mealType} onChange={e => setMealType(e.target.value)}>{["Breakfast", "Lunch", "Dinner", "Snack"].map(m => <option key={m} value={m}>{m}</option>)}</select></Field>
+      <Field label="Date"><input style={inputStyle} type="date" value={date} onChange={e => setDate(e.target.value)} /></Field>
+      <Btn full onClick={save} disabled={!foodId}>Log food</Btn>
+    </Modal>
+  );
+}
+function LogActivityModal({ onClose, onSave, latestBW }) {
+  const [mode, setMode] = useState("standard");
+  const [activity, setActivity] = useState("Weight training");
+  const [minutes, setMinutes] = useState("30");
+  const [speed, setSpeed] = useState("3.0");
+  const [grade, setGrade] = useState("0");
+  const [treadmillMode, setTreadmillMode] = useState("walk");
+  const [calories, setCalories] = useState("");
+  const estimated = mode === "treadmill"
+    ? caloriesFromMET(treadmillMET(parseFloat(speed) || 0, parseFloat(grade) || 0, treadmillMode), parseFloat(minutes) || 0, latestBW)
+    : caloriesFromMET(MET_TABLE[activity] || 5.0, parseFloat(minutes) || 0, latestBW);
+  const save = () => {
+    const cals = calories !== "" ? parseFloat(calories) : estimated;
+    const label = mode === "treadmill" ? `Treadmill incline (${grade}%)` : activity;
+    onSave({ id: uid("act"), date: todayStr(), activity: label, durationMinutes: parseFloat(minutes) || 0, caloriesBurned: cals });
+    onClose();
+  };
+  return (
+    <Modal title="Log activity / calories burned" onClose={onClose}>
+      <Field label="Type">
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => setMode("standard")} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "2px solid var(--rule)", background: mode === "standard" ? "var(--primary)" : "var(--surface)", color: mode === "standard" ? "#fff" : "var(--ink)", cursor: "pointer", fontWeight: 700 }}>Standard activity</button>
+          <button onClick={() => setMode("treadmill")} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "2px solid var(--rule)", background: mode === "treadmill" ? "var(--primary)" : "var(--surface)", color: mode === "treadmill" ? "#fff" : "var(--ink)", cursor: "pointer", fontWeight: 700 }}>Treadmill incline</button>
+        </div>
+      </Field>
+      {mode === "standard" ? (
+        <Field label="Activity"><select style={inputStyle} value={activity} onChange={e => setActivity(e.target.value)}>{Object.keys(MET_TABLE).map(a => <option key={a} value={a}>{a}</option>)}</select></Field>
+      ) : (
+        <>
+          <Field label="Mode">
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => setTreadmillMode("walk")} style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "2px solid var(--rule)", background: treadmillMode === "walk" ? "var(--teal)" : "var(--surface)", color: treadmillMode === "walk" ? "#fff" : "var(--ink)", cursor: "pointer", fontWeight: 700 }}>Walk</button>
+              <button onClick={() => setTreadmillMode("run")} style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "2px solid var(--rule)", background: treadmillMode === "run" ? "var(--teal)" : "var(--surface)", color: treadmillMode === "run" ? "#fff" : "var(--ink)", cursor: "pointer", fontWeight: 700 }}>Run</button>
+            </div>
+          </Field>
+          <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ flex: 1 }}><Field label="Speed (mph)"><input style={inputStyle} type="number" step="0.1" value={speed} onChange={e => setSpeed(e.target.value)} /></Field></div>
+            <div style={{ flex: 1 }}><Field label="Grade (%)"><input style={inputStyle} type="number" value={grade} onChange={e => setGrade(e.target.value)} /></Field></div>
+          </div>
+        </>
+      )}
+      <Field label="Duration (minutes)"><input style={inputStyle} type="number" value={minutes} onChange={e => setMinutes(e.target.value)} /></Field>
+      <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 10, fontWeight: 600 }}>Estimated: {num(estimated)} calories (using {latestBW ? `${latestBW} lb` : "an assumed 170 lb"} body weight).</div>
+      <Field label="Override calories burned (optional)"><input style={inputStyle} type="number" placeholder={String(estimated)} value={calories} onChange={e => setCalories(e.target.value)} /></Field>
+      <Btn full onClick={save}>Log activity</Btn>
+    </Modal>
+  );
+}
+
+function Nutrition({ state, setState }) {
+  const [addingFood, setAddingFood] = useState(false);
+  const [loggingFood, setLoggingFood] = useState(false);
+  const [loggingActivity, setLoggingActivity] = useState(false);
+  const [viewDate, setViewDate] = useState(todayStr());
+
+  const totals = dailyTotals(state.foodLogs, state.foods, viewDate);
+  const burned = dailyBurnedFromActivity(state.activityLogs, viewDate);
+  const latestBWEntry = [...state.bodyWeightLogs].sort((a, b) => b.date.localeCompare(a.date))[0];
+  const latestBW = latestBWEntry?.weight || parseFloat(state.profile.weightLb) || null;
+  const totalBurn = latestBW ? dailyTotalBurn(state.profile, latestBW, state.activityLogs, viewDate) : null;
+  const deficit = totalBurn != null ? round1(totalBurn - totals.calories) : null;
+  const balance = deficit != null ? classifyBalance(deficit, state.goalType) : null;
+  const idealRange = idealRangeFor(state.goalType);
+
+  const last14 = useMemo(() => {
+    if (!latestBW) return [];
+    return Array.from({ length: 14 }, (_, i) => {
+      const d = new Date(Date.now() - (13 - i) * DAY).toISOString().slice(0, 10);
+      const t = dailyTotals(state.foodLogs, state.foods, d);
+      const tb = dailyTotalBurn(state.profile, latestBW, state.activityLogs, d);
+      return tb != null && t.calories > 0 ? { x: d, y: round1(tb - t.calories) } : null;
+    }).filter(Boolean);
+  }, [state, latestBW]);
+  const avgDeficit14 = last14.length ? round1(last14.reduce((s, p) => s + p.y, 0) / last14.length) : null;
+  const weightTrend14 = computeWeightTrend(state.bodyWeightLogs, 14);
+  const dietSuggestion = computeDietAdjustment(avgDeficit14, weightTrend14, state.goalType);
+
+  const dayLogs = state.foodLogs.filter(l => l.date === viewDate);
+  const dayActivities = state.activityLogs.filter(a => a.date === viewDate);
+  const foodName = (id) => state.foods.find(f => f.id === id)?.name || "—";
+  const deleteFoodLog = (id) => setState(s => ({ ...s, foodLogs: s.foodLogs.filter(l => l.id !== id) }));
+  const deleteActivity = (id) => setState(s => ({ ...s, activityLogs: s.activityLogs.filter(a => a.id !== id) }));
+
+  const proteinGap = state.goals.dailyProtein - totals.protein;
+  const proteinFoodSuggestions = ["chicken breast", "Greek yogurt", "eggs", "tofu", "a protein shake", "cottage cheese"];
+
+  return (
+    <div>
+      <SectionHeader eyebrow="Log it, don't guess it" title="Nutrition" action={<div style={{ display: "flex", gap: 8 }}><Btn small variant="ghost" onClick={() => setAddingFood(true)}>Add food</Btn><Btn small icon={IconPlus} onClick={() => setLoggingFood(true)}>Log food</Btn></div>} />
+      <Field label="Viewing date"><input style={{ ...inputStyle, maxWidth: 200 }} type="date" value={viewDate} onChange={e => setViewDate(e.target.value)} /></Field>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+        <div><div style={{ fontSize: 13, fontWeight: 800, marginBottom: 8 }}>Macros — {fmtDate(viewDate)}</div><PieChart data={[{ label: "Protein", value: totals.protein * 4 }, { label: "Carbs", value: totals.carbs * 4 }, { label: "Fat", value: totals.fat * 9 }]} /></div>
+        <Card>
+          <StatLine label="Calories" value={`${num(totals.calories)} / ${num(state.goals.dailyCalories)}`} />
+          <StatLine label="Protein" value={`${num(totals.protein)} / ${num(state.goals.dailyProtein)} g`} tone={proteinGap > 0 ? "warn" : "positive"} />
+          <StatLine label="Carbs" value={`${num(totals.carbs)} / ${num(state.goals.dailyCarbs)} g`} />
+          <StatLine label="Fat" value={`${num(totals.fat)} / ${num(state.goals.dailyFat)} g`} />
+        </Card>
+      </div>
+
+      {totalBurn != null ? (
+        <Card style={{ marginBottom: 16, background: balance.tone === "positive" ? "var(--positive)" : balance.tone === "negative" ? "var(--negative)" : "var(--warn)", border: "none", color: "#fff" }}>
+          <div style={{ fontSize: 13, fontWeight: 800, textTransform: "uppercase", opacity: 0.85 }}>Idle burn (BMR × 1.2) + activity</div>
+          <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "var(--font-display)", margin: "4px 0" }}>{num(totalBurn)} cal burned · {num(burned)} from logged activity</div>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>{deficit >= 0 ? `${num(deficit)} cal deficit` : `${num(-deficit)} cal surplus`} — {balance.label}</div>
+        </Card>
+      ) : (
+        <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 16 }}>Fill in your profile in the Coach tab to unlock automatic idle-calorie tracking.</div>
+      )}
+
+      {last14.length > 0 && (
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 8 }}>Deficit / surplus — last 14 days</div>
+          <BalanceChart points={last14} idealRange={idealRange} />
+          <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 6, fontWeight: 600 }}>Shaded band = your target {idealRange.label} range for {state.goalType === "lose" ? "fat loss" : state.goalType === "gain" ? "muscle gain" : "maintenance/recomp"}. Green bars are on target, orange too small or large, pink means you were in a surplus while aiming for a deficit (or vice versa).</div>
+          {avgDeficit14 != null && <div style={{ fontSize: 13.5, marginTop: 8, fontWeight: 700 }}>14-day average: {avgDeficit14 >= 0 ? `${num(avgDeficit14)} cal deficit/day` : `${num(-avgDeficit14)} cal surplus/day`}.</div>}
+          {dietSuggestion && <div style={{ fontSize: 13.5, marginTop: 6, fontWeight: 600, color: "var(--primary)" }}>{dietSuggestion}</div>}
+        </Card>
+      )}
+
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 8 }}>Suggestions</div>
+        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, lineHeight: 1.9, fontWeight: 500 }}>
+          {proteinGap > 10 && <li>You're {num(proteinGap)} g short on protein — {proteinFoodSuggestions[Math.floor(Math.random() * proteinFoodSuggestions.length)]} would help close the gap.</li>}
+          {proteinGap <= 10 && <li>Protein is on track today.</li>}
+        </ul>
+      </Card>
+
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 8 }}>Food log — {fmtDate(viewDate)}</div>
+        {dayLogs.length === 0 && <div style={{ fontSize: 13, color: "var(--muted)" }}>Nothing logged for this day.</div>}
+        {dayLogs.map(l => (
+          <div key={l.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--rule)", fontSize: 13.5 }}>
+            <span>{foodName(l.foodId)} × {l.servings} <span style={{ color: "var(--muted)" }}>({l.mealType})</span></span>
+            <button onClick={() => deleteFoodLog(l.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)" }}><IconX size={14} /></button>
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <SectionHeader eyebrow="Cardio, lifting, anything active" title="Activity" action={<Btn small icon={IconPlus} onClick={() => setLoggingActivity(true)}>Log activity</Btn>} />
+        {dayActivities.length === 0 && <div style={{ fontSize: 13, color: "var(--muted)" }}>Nothing logged for this day.</div>}
+        {dayActivities.map(a => (
+          <div key={a.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--rule)", fontSize: 13.5 }}>
+            <span>{a.activity} — {a.durationMinutes} min</span>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}><span>{num(a.caloriesBurned)} cal</span><button onClick={() => deleteActivity(a.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)" }}><IconX size={14} /></button></div>
+          </div>
+        ))}
+      </div>
+
+      {addingFood && <FoodForm onClose={() => setAddingFood(false)} onSave={(f) => setState(s => ({ ...s, foods: [...s.foods, f] }))} />}
+      {loggingFood && <LogFoodModal foods={state.foods} onClose={() => setLoggingFood(false)} onSave={(l) => setState(s => ({ ...s, foodLogs: [...s.foodLogs, l] }))} />}
+      {loggingActivity && <LogActivityModal latestBW={latestBW} onClose={() => setLoggingActivity(false)} onSave={(a) => setState(s => ({ ...s, activityLogs: [...s.activityLogs, a] }))} />}
+    </div>
+  );
+}
+
+/* ============================================================
+   SCHEDULE
+   ============================================================ */
+function Schedule({ state, setState }) {
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ day: "1", time: "17:30", label: "" });
+  const add = () => { if (!form.label) return; setState(s => ({ ...s, schedule: [...s.schedule, { id: uid("sch"), day: parseInt(form.day), time: form.time, label: form.label }] })); setForm({ day: "1", time: "17:30", label: "" }); setAdding(false); };
+  const remove = (id) => setState(s => ({ ...s, schedule: s.schedule.filter(s2 => s2.id !== id) }));
+  const grouped = DAYS.map((name, i) => ({ name, i, items: state.schedule.filter(s => s.day === i).sort((a, b) => a.time.localeCompare(b.time)) }));
+
+  return (
+    <div>
+      <SectionHeader eyebrow="Recurring weekly plan" title="Gym schedule" action={<Btn small icon={IconPlus} onClick={() => setAdding(true)}>Add session</Btn>} />
+      {grouped.map(g => (
+        <div key={g.i} style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: g.items.length ? "var(--ink)" : "var(--muted)", padding: "8px 0", borderBottom: "2px solid var(--rule)" }}>{g.name}</div>
+          {g.items.map(item => <div key={item.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", fontSize: 13.5, fontWeight: 600 }}><span>{item.time} — {item.label}</span><button onClick={() => remove(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)" }}><IconX size={14} /></button></div>)}
+        </div>
+      ))}
+      {adding && (
+        <Modal title="Add gym session" onClose={() => setAdding(false)}>
+          <Field label="Day"><select style={inputStyle} value={form.day} onChange={e => setForm(f => ({ ...f, day: e.target.value }))}>{DAYS.map((d, i) => <option key={i} value={i}>{d}</option>)}</select></Field>
+          <Field label="Time"><input style={inputStyle} type="time" value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))} /></Field>
+          <Field label="Label"><input style={inputStyle} value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} placeholder="e.g. Push day" /></Field>
+          <Btn full onClick={add}>Add</Btn>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   COACH — the "AI section"
+   ============================================================ */
+function Coach({ state, setState }) {
+  const [profile, setProfile] = useState({ ...state.profile });
+  const [goalType, setGoalType] = useState(state.goalType);
+  const [trainingDays, setTrainingDays] = useState("4");
+  const [scheduleTime, setScheduleTime] = useState("17:30");
+  const [scheduleDays, setScheduleDays] = useState("4");
+  const [previewSchedule, setPreviewSchedule] = useState(null);
+  const [savedMsg, setSavedMsg] = useState("");
+
+  const profileComplete = profile.age && profile.heightIn && profile.weightLb;
+  const suggestion = profileComplete ? computeCoachSuggestion({ ...profile, age: parseFloat(profile.age), heightIn: parseFloat(profile.heightIn), weightLb: parseFloat(profile.weightLb) }, goalType, parseInt(trainingDays)) : null;
+
+  const saveProfile = () => { setState(s => ({ ...s, profile, goalType })); setSavedMsg("Profile saved."); setTimeout(() => setSavedMsg(""), 2000); };
+  const setAsGoal = () => {
+    if (!suggestion) return;
+    setState(s => ({ ...s, profile, goalType, goals: { dailyCalories: suggestion.calories, dailyProtein: suggestion.protein, dailyCarbs: suggestion.carbs, dailyFat: suggestion.fat } }));
+    setSavedMsg("New nutrition goal set!");
+    setTimeout(() => setSavedMsg(""), 2500);
+  };
+  const previewGeneratedSchedule = () => setPreviewSchedule(generateSchedule(parseInt(scheduleDays), scheduleTime));
+  const applySchedule = () => { if (!previewSchedule) return; setState(s => ({ ...s, schedule: previewSchedule })); setPreviewSchedule(null); setSavedMsg("Schedule applied!"); setTimeout(() => setSavedMsg(""), 2500); };
+
+  return (
+    <div>
+      <SectionHeader eyebrow="The AI section" title="Coach" />
+      {savedMsg && <div style={{ background: "var(--positive)", color: "#fff", padding: "10px 14px", borderRadius: 12, marginBottom: 16, fontWeight: 700, fontSize: 14 }}>{savedMsg}</div>}
+
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}><IconSparkle size={20} style={{ color: "var(--primary)" }} /><div style={{ fontWeight: 800, fontSize: 16 }}>Calorie &amp; protein target</div></div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ flex: 1 }}><Field label="Sex"><select style={inputStyle} value={profile.sex} onChange={e => setProfile(p => ({ ...p, sex: e.target.value }))}><option value="male">Male</option><option value="female">Female</option></select></Field></div>
+          <div style={{ flex: 1 }}><Field label="Age"><input style={inputStyle} type="number" value={profile.age} onChange={e => setProfile(p => ({ ...p, age: e.target.value }))} /></Field></div>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ flex: 1 }}><Field label="Height (inches)"><input style={inputStyle} type="number" value={profile.heightIn} onChange={e => setProfile(p => ({ ...p, heightIn: e.target.value }))} placeholder="e.g. 70" /></Field></div>
+          <div style={{ flex: 1 }}><Field label="Weight (lb)"><input style={inputStyle} type="number" value={profile.weightLb} onChange={e => setProfile(p => ({ ...p, weightLb: e.target.value }))} /></Field></div>
+        </div>
+        <Field label="Goal">
+          <div style={{ display: "flex", gap: 8 }}>
+            {[["lose", "Lose fat"], ["recomp", "Recomp"], ["gain", "Build muscle"]].map(([v, label]) => (
+              <button key={v} onClick={() => setGoalType(v)} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "2px solid var(--rule)", background: goalType === v ? "var(--primary)" : "var(--surface)", color: goalType === v ? "#fff" : "var(--ink)", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>{label}</button>
+            ))}
+          </div>
+        </Field>
+        <Field label="Training days per week"><input style={inputStyle} type="number" min="1" max="7" value={trainingDays} onChange={e => setTrainingDays(e.target.value)} /></Field>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Btn variant="ghost" onClick={saveProfile}>Save profile</Btn>
+        </div>
+        {suggestion && (
+          <div style={{ marginTop: 16, padding: 14, background: "var(--bg)", borderRadius: 14 }}>
+            <div style={{ fontSize: 12.5, color: "var(--muted)", fontWeight: 600, marginBottom: 6 }}>BMR {num(suggestion.bmr)} · baseline (BMR×1.2) {num(suggestion.baseline)} · maintenance with training {num(suggestion.maintenance)}</div>
+            <StatLine label="Suggested calories" value={num(suggestion.calories)} size="lg" tone="primary" />
+            <StatLine label="Suggested protein" value={`${num(suggestion.protein)} g`} />
+            <StatLine label="Suggested carbs" value={`${num(suggestion.carbs)} g`} />
+            <StatLine label="Suggested fat" value={`${num(suggestion.fat)} g`} />
+            <Btn full onClick={setAsGoal} style={{ marginTop: 10 }}>Set as my new goal</Btn>
+          </div>
+        )}
+        {!profileComplete && <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 10 }}>Fill in age, height, and weight to see your suggestion.</div>}
+      </Card>
+
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}><IconCalendar size={20} style={{ color: "var(--teal)" }} /><div style={{ fontWeight: 800, fontSize: 16 }}>Suggested gym schedule</div></div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ flex: 1 }}><Field label="Days per week"><select style={inputStyle} value={scheduleDays} onChange={e => setScheduleDays(e.target.value)}>{[2, 3, 4, 5, 6].map(d => <option key={d} value={d}>{d}</option>)}</select></Field></div>
+          <div style={{ flex: 1 }}><Field label="Time"><input style={inputStyle} type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)} /></Field></div>
+        </div>
+        <Btn variant="ghost" onClick={previewGeneratedSchedule}>Generate schedule</Btn>
+        {previewSchedule && (
+          <div style={{ marginTop: 14 }}>
+            {previewSchedule.map(s => <div key={s.id} style={{ fontSize: 13.5, padding: "5px 0", fontWeight: 600 }}>{DAYS[s.day]} {s.time} — {s.label}</div>)}
+            <div style={{ fontSize: 12, color: "var(--muted)", margin: "8px 0" }}>Applying this replaces your current weekly schedule.</div>
+            <Btn full variant="teal" onClick={applySchedule}>Apply this schedule</Btn>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+/* ============================================================
+   GUIDED WORKOUT MODE — rest timer, live rep entry, auto-advance
+   ============================================================ */
+function GuidedWorkout({ state, setState, onClose }) {
+  const exercises = useMemo(() => [...state.exercises].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)), [state.exercises]);
+  const [index, setIndex] = useState(0);
+  const [setNum, setSetNum] = useState(1);
+  const [repsInput, setRepsInput] = useState("");
+  const [repsSoFar, setRepsSoFar] = useState([]);
+  const [phase, setPhase] = useState("work"); // work | rest | exerciseComplete | cardio | done
+  const [restRemaining, setRestRemaining] = useState(0);
+  const [savedReps, setSavedReps] = useState({}); // exerciseId -> reps array, for final save
+  const timerRef = useRef(null);
+
+  const exercise = exercises[index];
+
+  useEffect(() => {
+    if (phase !== "rest") return;
+    timerRef.current = setInterval(() => {
+      setRestRemaining(r => {
+        if (r <= 1) { clearInterval(timerRef.current); setPhase("work"); return 0; }
+        return r - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [phase]);
+
+  if (exercises.length === 0) return (
+    <Modal title="Guided workout" onClose={onClose}><div>Add at least one exercise first.</div></Modal>
+  );
+
+  const logSet = () => {
+    const reps = parseInt(repsInput); if (isNaN(reps)) return;
+    const newReps = [...repsSoFar, reps];
+    setRepsSoFar(newReps);
+    setRepsInput("");
+    if (setNum >= exercise.targetSets) {
+      setSavedReps(prev => ({ ...prev, [exercise.id]: newReps }));
+      setState(s => ({ ...s, workoutLogs: [...s.workoutLogs, { id: uid("wl"), date: todayStr(), exerciseId: exercise.id, weight: exercise.currentWeight, reps: newReps }] }));
+      setPhase("exerciseComplete");
+    } else {
+      setRestRemaining(exercise.restSeconds || 90);
+      setPhase("rest");
+    }
+  };
+  const nextExercise = () => {
+    if (index + 1 < exercises.length) { setIndex(index + 1); setSetNum(1); setRepsSoFar([]); setPhase("work"); }
+    else setPhase("cardio");
+  };
+  const skipExercise = () => { setRepsSoFar([]); setSetNum(1); nextExercise(); };
+  useEffect(() => { if (phase === "work" && repsSoFar.length > 0) setSetNum(repsSoFar.length + 1); }, [repsSoFar]);
+
+  const nextExName = exercises[index + 1]?.name;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "var(--bg)", zIndex: 100, overflowY: "auto" }}>
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "24px 20px 60px" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ background: "var(--surface)", border: "none", borderRadius: 999, width: 36, height: 36, cursor: "pointer" }}><IconX size={18} /></button>
+        </div>
+
+        {phase !== "done" && phase !== "cardio" && (
+          <>
+            <div style={{ textAlign: "center", marginTop: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "var(--primary)", textTransform: "uppercase", letterSpacing: 0.5 }}>Exercise {index + 1} of {exercises.length}</div>
+              <div style={{ fontSize: 32, fontWeight: 900, fontFamily: "var(--font-display)", margin: "6px 0" }}>{exercise.name}</div>
+              <div style={{ fontSize: 15, color: "var(--muted)", fontWeight: 700 }}>{exercise.currentWeight} lb · target {exercise.targetSets} × {exercise.targetReps}</div>
+            </div>
+
+            {phase === "work" && (
+              <Card style={{ marginTop: 24, textAlign: "center" }}>
+                <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 14 }}>Set {setNum} of {exercise.targetSets}</div>
+                <input style={{ ...inputStyle, textAlign: "center", fontSize: 32, fontWeight: 900, fontFamily: "var(--font-display)", padding: "16px" }} type="number" autoFocus placeholder="Reps" value={repsInput} onChange={e => setRepsInput(e.target.value)} />
+                <div style={{ height: 14 }} />
+                <Btn full onClick={logSet} disabled={repsInput === ""}>Log set{setNum < exercise.targetSets ? " & rest" : ""}</Btn>
+                <div style={{ height: 10 }} />
+                <Btn full variant="link" onClick={skipExercise}>Skip this exercise</Btn>
+              </Card>
+            )}
+
+            {phase === "rest" && (
+              <Card style={{ marginTop: 24, textAlign: "center", background: "var(--teal)", color: "#fff", border: "none" }}>
+                <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 6, opacity: 0.9 }}>REST</div>
+                <div style={{ fontSize: 64, fontWeight: 900, fontFamily: "var(--font-display)", lineHeight: 1 }}>{Math.floor(restRemaining / 60)}:{String(restRemaining % 60).padStart(2, "0")}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 10 }}>Next: set {setNum} of {exercise.targetSets}</div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 16 }}>
+                  <button onClick={() => setRestRemaining(r => r + 30)} style={{ background: "rgba(255,255,255,0.25)", border: "none", borderRadius: 999, padding: "8px 16px", color: "#fff", fontWeight: 700, cursor: "pointer" }}>+30s</button>
+                  <button onClick={() => setPhase("work")} style={{ background: "#fff", border: "none", borderRadius: 999, padding: "8px 16px", color: "var(--teal)", fontWeight: 800, cursor: "pointer" }}>Skip rest</button>
+                </div>
+              </Card>
+            )}
+
+            {phase === "exerciseComplete" && (
+              <Card style={{ marginTop: 24, textAlign: "center", background: "var(--positive)", color: "#fff", border: "none" }}>
+                <div style={{ fontSize: 40 }}>🎉</div>
+                <div style={{ fontSize: 20, fontWeight: 800, margin: "8px 0" }}>Nice work on {exercise.name}!</div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{savedReps[exercise.id]?.join("-")} reps logged.</div>
+                {nextExName ? (
+                  <>
+                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Time to move to {nextExName}!</div>
+                    <Btn full onClick={nextExercise}>Start {nextExName}</Btn>
+                  </>
+                ) : <Btn full onClick={nextExercise}>Finish workout</Btn>}
+              </Card>
+            )}
+          </>
+        )}
+
+        {phase === "cardio" && (
+          <GuidedCardioPrompt state={state} setState={setState} onDone={() => setPhase("done")} />
+        )}
+
+        {phase === "done" && (
+          <div style={{ textAlign: "center", marginTop: 60 }}>
+            <div style={{ fontSize: 56 }}>💪</div>
+            <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "var(--font-display)", margin: "10px 0" }}>Workout complete!</div>
+            <div style={{ fontSize: 15, color: "var(--muted)", fontWeight: 600, marginBottom: 24 }}>Great session. See you next time.</div>
+            <Btn onClick={onClose}>Close</Btn>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+function GuidedCardioPrompt({ state, setState, onDone }) {
+  const [logging, setLogging] = useState(false);
+  const latestBW = [...state.bodyWeightLogs].sort((a, b) => b.date.localeCompare(a.date))[0]?.weight || parseFloat(state.profile.weightLb) || null;
+  return (
+    <Card style={{ marginTop: 40, textAlign: "center" }}>
+      <div style={{ fontSize: 40 }}>🏃</div>
+      <div style={{ fontSize: 20, fontWeight: 800, margin: "8px 0" }}>Strength work done!</div>
+      <div style={{ fontSize: 14, color: "var(--muted)", fontWeight: 600, marginBottom: 16 }}>Doing cardio after this? Log it now, or skip.</div>
+      <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        <Btn variant="ghost" onClick={onDone}>Skip</Btn>
+        <Btn onClick={() => setLogging(true)}>Log cardio</Btn>
+      </div>
+      {logging && <LogActivityModal latestBW={latestBW} onClose={() => setLogging(false)} onSave={(a) => { setState(s => ({ ...s, activityLogs: [...s.activityLogs, a] })); setLogging(false); onDone(); }} />}
+    </Card>
+  );
+}
+
+/* ============================================================
+   PRINTABLE REPORT
+   ============================================================ */
+function PrintReport({ state }) {
+  return (
+    <div className="print-report">
+      <h1>Iron &amp; Table — Progress Report</h1>
+      <div style={{ color: "#555", marginBottom: 16 }}>Generated {fmtDateFull(new Date())}</div>
+      <h3>Exercises</h3>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
+        <thead><tr><th style={{ textAlign: "left" }}>Exercise</th><th style={{ textAlign: "left" }}>Target</th><th style={{ textAlign: "left" }}>Current weight</th><th style={{ textAlign: "left" }}>Last session</th></tr></thead>
+        <tbody>{state.exercises.map(ex => { const logs = state.workoutLogs.filter(l => l.exerciseId === ex.id).sort((a, b) => b.date.localeCompare(a.date)); return <tr key={ex.id} style={{ borderBottom: "1px solid #ccc" }}><td>{ex.name}</td><td>{ex.targetSets}×{ex.targetReps}</td><td>{ex.currentWeight} lb</td><td>{logs[0] ? `${fmtDate(logs[0].date)}: ${logs[0].reps.join("-")}` : "—"}</td></tr>; })}</tbody>
+      </table>
+      <h3>Weekly Gym Schedule</h3>
+      <ul>{state.schedule.map(s => <li key={s.id}>{DAYS[s.day]} {s.time} — {s.label}</li>)}</ul>
+    </div>
+  );
+}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+const TABS = [
+  { key: "dashboard", label: "Dashboard", icon: IconFlame },
+  { key: "exercises", label: "Exercises", icon: IconDumbbell },
+  { key: "progress", label: "Progress", icon: IconTrend },
+  { key: "nutrition", label: "Nutrition", icon: IconApple },
+  { key: "schedule", label: "Schedule", icon: IconCalendar },
+  { key: "coach", label: "Coach", icon: IconSparkle },
+];
+
+function App() {
+  const [state, setState, loaded] = useAppState();
+  const [tab, setTab] = useState("dashboard");
+  const [guided, setGuided] = useState(false);
+  if (!loaded) return null;
+
+  return (
+    <div style={{ minHeight: "100vh", fontSize: 14, lineHeight: 1.5 }}>
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "20px 16px 60px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 4 }}>
+          <div style={{ background: "var(--primary)", borderRadius: 12, padding: 6, display: "flex" }}><IconDumbbell size={18} style={{ color: "#fff" }} /></div>
+          <span style={{ fontSize: 21, fontWeight: 900, fontFamily: "var(--font-display)" }}>Iron &amp; Table</span>
+        </div>
+        <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 20, fontWeight: 600 }}>Log honestly, and let the numbers tell you when to move up.</div>
+
+        <div className="scrollx" style={{ display: "flex", gap: 6, marginBottom: 24 }}>
+          {TABS.map(t => {
+            const IC = t.icon; const active = tab === t.key;
+            return <button key={t.key} onClick={() => setTab(t.key)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 14px", background: active ? "var(--primary)" : "var(--surface)", border: "2px solid " + (active ? "var(--primary)" : "var(--rule)"), borderRadius: 999, color: active ? "#fff" : "var(--ink)", fontWeight: 800, fontSize: 13.5, cursor: "pointer", whiteSpace: "nowrap" }}><IC size={15} />{t.label}</button>;
+          })}
+        </div>
+
+        {tab === "dashboard" && <Dashboard state={state} setState={setState} onStartGuided={() => setGuided(true)} />}
+        {tab === "exercises" && <Exercises state={state} setState={setState} onStartGuided={() => setGuided(true)} />}
+        {tab === "progress" && <Progress state={state} onExport={() => window.print()} />}
+        {tab === "nutrition" && <Nutrition state={state} setState={setState} />}
+        {tab === "schedule" && <Schedule state={state} setState={setState} />}
+        {tab === "coach" && <Coach state={state} setState={setState} />}
+      </div>
+      <PrintReport state={state} />
+      {guided && <GuidedWorkout state={state} setState={setState} onClose={() => setGuided(false)} />}
+    </div>
+  );
+}
+
+try {
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  document.getElementById("root").dataset.mounted = "1";
+} catch (err) {
+  document.getElementById("root").innerHTML =
+    '<div style="padding:40px;font-family:sans-serif;color:#FF4D6D;max-width:520px;margin:0 auto;">' +
+    '<b>The app failed to start.</b><br/><br/>' + (err && err.message ? err.message : String(err)) +
+    '<br/><br/>Try a hard refresh. If this persists, open developer tools (F12) → Console and share the error shown there.</div>';
+  console.error(err);
+}
+</script>
+</body>
+</html>
